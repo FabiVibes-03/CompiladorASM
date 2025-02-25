@@ -1,11 +1,7 @@
 /*
     //SECTION REQUERIMIENTOS:
-    1) Implementar el get y set para los tokens -----
-    //ANCHOR Corroborar
-    //TODO: 2) Implementar parámetros por default en el constructor del archivo Léxico 
-    //REVIEW - 3) Implementar línea y columna en los errores semánticos ----- 
-    4) Implementar maximoTipo en la asignación (Cuando hagamos v.setValor(r) y poner una condición para )
-    5) Aplicar el casteo en el stack
+    1) Declarar las variables en ensamblador con su tipo de dato
+    2)
   //!SECTION  
 */
 
@@ -26,7 +22,6 @@ namespace ASM
         Stack<float> s;
         List<Variable> l;
         Variable.TipoDato maximoTipo;
-        //NOTE - Se crea como variable global
         bool huboCasteo = false;
         Variable.TipoDato tipoCasteo = Variable.TipoDato.Char;
         //!@params
@@ -58,10 +53,12 @@ namespace ASM
 
         private void displayLista()
         {
+            asm.WriteLine("SECTION .DATA");
             log.WriteLine("Lista de variables: ");
             foreach (Variable elemento in l)
             {
                 log.WriteLine($"{elemento.getNombre()} {elemento.GetTipoDato()} {elemento.getValor()}");
+                asm.WriteLine($"{elemento.getNombre()} DW ?");
             }
         }
 
@@ -283,9 +280,12 @@ namespace ASM
                     }
                     else
                     {
+                        asm.WriteLine($"; Asignacion de {v.getNombre()}");
                         Expresion();
                         r = s.Pop();
-                        asm.WriteLine("    POP");
+                        //NOTE - Checar
+                        asm.WriteLine("    POP EAX");
+                        asm.WriteLine($"    MOV DWORD[{v.getNombre()}], EAX");
                         maximoTipo = Variable.valorTipoDato(r, maximoTipo, huboCasteo);
                         v.setValor(r, linea, columna, log, maximoTipo);
                     }
@@ -614,7 +614,6 @@ namespace ASM
                 asm.WriteLine("    POP EAX");
                 float n2 = s.Pop();
                 asm.WriteLine("    POP EBX");
-                //REVIEW - Cree un float donde se aguarda el resultado y pushearlo al final
                 float resultado = 0;
                 switch (operador)
                 {
@@ -629,7 +628,6 @@ namespace ASM
                     tipoResultado = Variable.TipoDato.Float;
                 }
 
-                //NOTE - Esto evalua si existe oh no
                 if (huboCasteo)
                 {
                     maximoTipo = tipoCasteo;
@@ -672,14 +670,13 @@ namespace ASM
                 float n2 = s.Pop();
                 asm.WriteLine("    POP EAX");
 
-                //REVIEW - Cree un float donde se aguarda el resultado y pushearlo al final
                 float resultado = 0;
+                int flagAsm = 4;
                 switch (operador)
                 {
-                    //REVIEW - Pa despues, Todo en asm papito
-                    case "*": resultado = n2 * n1; asm.WriteLine("     MUL EBX, EAX"); break; //AX
-                    case "/": resultado = n2 / n1; asm.WriteLine("     DIV EBX, EAX"); break; //AL
-                    case "%": resultado = n2 % n1; asm.WriteLine("     DIV EBX, EAX"); break; //AH
+                    case "*": resultado = n2 * n1; asm.WriteLine("     MUL EBX, EAX"); flagAsm = 0; break; //AX
+                    case "/": resultado = n2 / n1; asm.WriteLine("     DIV EBX, EAX"); flagAsm = 1; break; //AL
+                    case "%": resultado = n2 % n1; asm.WriteLine("     DIV EBX, EAX"); flagAsm = 2; break; //AH
                 }
                 Variable.TipoDato tipoResultado = Variable.valorTipoDato(resultado, maximoTipo, huboCasteo);
                 if (maximoTipo == Variable.TipoDato.Float || tipoResultado == Variable.TipoDato.Float)
@@ -687,14 +684,12 @@ namespace ASM
                     tipoResultado = Variable.TipoDato.Float;
                 }
 
-                //NOTE - Se hace lo mismo que antes
                 if (huboCasteo)
                 {
                     maximoTipo = tipoCasteo;
                 }
                 else
                 {
-                    //NOTE - Nos aseguramos que char y float como int y float, el resultado sea float
                     if (maximoTipo == Variable.TipoDato.Float || tipoResultado == Variable.TipoDato.Float)
                     {
                         maximoTipo = Variable.TipoDato.Float;
@@ -704,13 +699,18 @@ namespace ASM
                         maximoTipo = tipoResultado;
                     }
                 }
-                asm.WriteLine("     PUSH");
+
+                switch(flagAsm){
+                    case 0: asm.WriteLine("     PUSH AX"); break;
+                    case 1: asm.WriteLine("     PUSH EAX"); break;
+                    case 2: asm.WriteLine("     PUSH EDX"); break;
+                    case 4: break; 
+                }
                 s.Push(resultado);
             }
         }
 
         //SECTION - FACTOR
-        //FIXME - No hay una validación en caso de que el valor sea de tipo Caracter
         //Factor -> numero | identificador | (Expresion)
         private void Factor()
         {
@@ -779,8 +779,6 @@ namespace ASM
                 //!SECTION
                 // Evalúa la expresión dentro de los paréntesis
                 Expresion();
-
-                //REVIEW - Si hubo casteo, actualiza el tipo máximo
                 if (huboCasteo)
                 {
                     float valor = s.Pop();
@@ -792,7 +790,6 @@ namespace ASM
                             valor = valor % MathF.Pow(2, 16);
                             break;
 
-                        //NOTE - Eliminamos numeros decimales y pasamos a float por la naturaleza de la variable a la que se asigna
                         case Variable.TipoDato.Char:
                             valor = valor % MathF.Pow(2, 8);
                             break;
@@ -812,15 +809,6 @@ namespace ASM
 
 //SECTION - Cambios de esta version
 /*
-    En lenguaje se aplico un cambio en las variables globales, creamos bool huboCasteo
-    Esto se aplica para cuando el casteo es explicito y se cambio el porFactor y masTermino
-
-    En Factor se detecta si existe casteo
-
-    En factor se crea una variable llamada "valor" donde se guarda el -contenido- de una expresion
-
-    En la clase variable se modifico la estructura del TipoValor
-
-    general: Se arreglo el problema del casteo con char 
+   
 */
 //!SECTION
