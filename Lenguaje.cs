@@ -58,7 +58,7 @@ namespace ASM
             foreach (Variable elemento in l)
             {
                 log.WriteLine($"{elemento.getNombre()} {elemento.GetTipoDato()} {elemento.getValor()}");
-                asm.WriteLine($"{elemento.getNombre()} DW ?");
+                asm.WriteLine($"{elemento.getNombre()} DW 0");
             }
         }
 
@@ -165,7 +165,8 @@ namespace ASM
                     // Como no se ingresó un número desde el Console, entonces viene de una expresión matemática
                     Expresion();
                     float resultado = s.Pop();
-                    asm.WriteLine("    POP");
+                    //NOTE - Este pop se agregaba hasta el final del asm
+                    //asm.WriteLine("    POP");
                     v.setValor(resultado, linea, columna, log, maximoTipo);
                 }
             }
@@ -294,7 +295,7 @@ namespace ASM
                     match("+=");
                     Expresion();
                     r = v.getValor() + s.Pop();
-                    asm.WriteLine("    POP");
+                    asm.WriteLine("    POP 2");
                     maximoTipo = Variable.valorTipoDato(r, maximoTipo, huboCasteo);
                     v.setValor(r, linea, columna, log, maximoTipo);
                     break;
@@ -302,7 +303,7 @@ namespace ASM
                     match("-=");
                     Expresion();
                     r = v.getValor() - s.Pop();
-                    asm.WriteLine("    POP");
+                    asm.WriteLine("    POP 3");
                     maximoTipo = Variable.valorTipoDato(r, maximoTipo, huboCasteo);
                     v.setValor(r, linea, columna, log, maximoTipo);
                     break;
@@ -310,7 +311,7 @@ namespace ASM
                     match("*=");
                     Expresion();
                     r = v.getValor() * s.Pop();
-                    asm.WriteLine("    POP");
+                    asm.WriteLine("    POP 4");
                     maximoTipo = Variable.valorTipoDato(r, maximoTipo, huboCasteo);
                     v.setValor(r, linea, columna, log, maximoTipo);
                     break;
@@ -318,7 +319,7 @@ namespace ASM
                     match("/=");
                     Expresion();
                     r = v.getValor() / s.Pop();
-                    asm.WriteLine("    POP");
+                    asm.WriteLine("    POP 5");
                     maximoTipo = Variable.valorTipoDato(r, maximoTipo, huboCasteo);
                     v.setValor(r, linea, columna, log, maximoTipo);
                     break;
@@ -326,7 +327,7 @@ namespace ASM
                     match("%=");
                     Expresion();
                     r = v.getValor() % s.Pop();
-                    asm.WriteLine("    POP");
+                    asm.WriteLine("    POP 6");
                     maximoTipo = Variable.valorTipoDato(r, maximoTipo, huboCasteo);
                     v.setValor(r, linea, columna, log, maximoTipo);
                     break;
@@ -374,7 +375,7 @@ namespace ASM
 
             Expresion();
             float valor1 = s.Pop();
-            asm.WriteLine("    POP");
+            asm.WriteLine("    POP 7");
             string operador = Contenido;
             match(Tipos.OperadorRelacional);
 
@@ -382,7 +383,7 @@ namespace ASM
 
             Expresion();
             float valor2 = s.Pop();
-            asm.WriteLine("    POP");
+            asm.WriteLine("    POP 8");
             switch (operador)
             {
                 case ">": return valor1 > valor2;
@@ -674,9 +675,9 @@ namespace ASM
                 int flagAsm = 4;
                 switch (operador)
                 {
-                    case "*": resultado = n2 * n1; asm.WriteLine("     MUL EBX, EAX"); flagAsm = 0; break; //AX
-                    case "/": resultado = n2 / n1; asm.WriteLine("     DIV EBX, EAX"); flagAsm = 1; break; //AL
-                    case "%": resultado = n2 % n1; asm.WriteLine("     DIV EBX, EAX"); flagAsm = 2; break; //AH
+                    case "*": resultado = n2 * n1; asm.WriteLine("     MUL EBX"); flagAsm = 0; break; //AX
+                    case "/": resultado = n2 / n1; asm.WriteLine("    XOR EDX, EDX"); asm.WriteLine("     DIV EBX"); flagAsm = 1; break; //AL
+                    case "%": resultado = n2 % n1; asm.WriteLine("    XOR EDX, EDX"); asm.WriteLine("     DIV EBX"); flagAsm = 2; break; //AH
                 }
                 Variable.TipoDato tipoResultado = Variable.valorTipoDato(resultado, maximoTipo, huboCasteo);
                 if (maximoTipo == Variable.TipoDato.Float || tipoResultado == Variable.TipoDato.Float)
@@ -701,7 +702,7 @@ namespace ASM
                 }
 
                 switch(flagAsm){
-                    case 0: asm.WriteLine("     PUSH AX"); break;
+                    case 0: asm.WriteLine("     PUSH EAX"); break;
                     case 1: asm.WriteLine("     PUSH EAX"); break;
                     case 2: asm.WriteLine("     PUSH EDX"); break;
                     case 4: break; 

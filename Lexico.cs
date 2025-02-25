@@ -87,8 +87,8 @@ namespace ASM
                 asm.WriteLine(";----------------------------------");
 
                 asm.WriteLine("SEGMENT .TEXT");
-                asm.WriteLine("GLOBAL MAIN");
-                asm.WriteLine("MAIN:");
+                asm.WriteLine("GLOBAL main");
+                asm.WriteLine("main:");
 
             }
             else

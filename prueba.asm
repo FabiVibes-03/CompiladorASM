@@ -1,9 +1,9 @@
 ;Archivo: prueba.cpp
-;Fecha y hora: 25/02/2025 11:51:56 a. m.
+;Fecha y hora: 25/02/2025 01:37:32 p. m.
 ;----------------------------------
 SEGMENT .TEXT
-GLOBAL MAIN
-MAIN:
+GLOBAL main
+main:
      MOV EAX, 3
      PUSH EAX
      MOV EAX, 5
@@ -16,8 +16,8 @@ MAIN:
      PUSH EAX
     POP EBX
     POP EAX
-     MUL EBX, EAX
-     PUSH AX
+     MUL EBX
+     PUSH EAX
      MOV EAX, 10
      PUSH EAX
      MOV EAX, 4
@@ -30,12 +30,12 @@ MAIN:
      PUSH EAX
     POP EBX
     POP EAX
-     DIV EBX, EAX
-     PUSH AL
+    XOR EDX, EDX
+     DIV EBX
+     PUSH EAX
     POP EAX
     POP EBX
      SUB EBX, EAX
      PUSH EBX
-    POP
 SECTION .DATA
-x26 DW ?
+x26 DW 0
