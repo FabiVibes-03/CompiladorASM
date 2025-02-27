@@ -1,5 +1,9 @@
 ;Archivo: prueba.cpp
+<<<<<<< HEAD
 ;Fecha y hora: 27/02/2025 11:16:11 a. m.
+=======
+;Fecha y hora: 27/02/2025 11:13:59 a. m.
+>>>>>>> 6a2af169c5eb637c2fc624efefef4bc2aba9308f
 ;----------------------------------
 SEGMENT .TEXT
 GLOBAL main
