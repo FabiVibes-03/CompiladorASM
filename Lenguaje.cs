@@ -1,7 +1,14 @@
 /*
     //SECTION REQUERIMIENTOS:
     1) Declarar las variables en ensamblador con su tipo de dato
-    2)
+    2) En asignacion generar codigo ensamblador para ++ (inc) -- (dec)
+    3) Para +=
+    4) Generar codigo para console.Write y Line
+    5) Console.Read y ReadLine
+    6) Generar codigo ensamblador para if, else 
+    7) Para el while
+    8) P el for 
+    9) Condicionar todos los set valor (if(execute))
   //!SECTION  
 */
 
