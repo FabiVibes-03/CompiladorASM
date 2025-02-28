@@ -9,6 +9,9 @@
     7) Para el while
     8) P el for 
     9) Condicionar todos los set valor (if(execute))
+
+
+    //TODO - PARAMETRIZAR
   //!SECTION  
 */
 
@@ -222,13 +225,13 @@ namespace ASM
                     If(ejecuta);
                     break;
                 case "while":
-                    While();
+                    While(ejecuta);
                     break;
                 case "do":
-                    Do();
+                    Do(ejecuta);
                     break;
                 case "for":
-                    For();
+                    For(ejecuta);
                     break;
                 default:
                     if (Clasificacion == Tipos.TipoDato)
@@ -254,7 +257,7 @@ namespace ASM
         */
 
         //SECTION - Asignacion
-        private void Asignacion()
+        private void Asignacion(bool execute)
         {
             huboCasteo = false;
             tipoCasteo = Variable.TipoDato.Char;
@@ -382,7 +385,7 @@ namespace ASM
 
             Expresion();
             float valor1 = s.Pop();
-            asm.WriteLine("    POP 7");
+            asm.WriteLine("    POP EBX");
             string operador = Contenido;
             match(Tipos.OperadorRelacional);
 
@@ -390,7 +393,9 @@ namespace ASM
 
             Expresion();
             float valor2 = s.Pop();
-            asm.WriteLine("    POP 8");
+            asm.WriteLine("    POP EAX");
+
+            asm.WriteLine("    CMP EAX, EBX");
             switch (operador)
             {
                 case ">": return valor1 > valor2;
@@ -625,8 +630,8 @@ namespace ASM
                 float resultado = 0;
                 switch (operador)
                 {
-                    case "+": resultado = n2 + n1; asm.WriteLine("     ADD EBX, EAX");  break;
-                    case "-": resultado = n2 - n1; asm.WriteLine("     SUB EBX, EAX");  break;
+                    case "+": resultado = n2 + n1; asm.WriteLine("     ADD EBX, EAX"); break;
+                    case "-": resultado = n2 - n1; asm.WriteLine("     SUB EBX, EAX"); break;
                 }
 
                 Variable.TipoDato tipoResultado = Variable.valorTipoDato(resultado, maximoTipo, huboCasteo);
@@ -653,7 +658,7 @@ namespace ASM
                 }
 
                 //Hacemos el push al final ya con el resultado
-                
+
                 asm.WriteLine("     PUSH EBX");
                 s.Push(resultado);
             }
@@ -708,11 +713,12 @@ namespace ASM
                     }
                 }
 
-                switch(flagAsm){
+                switch (flagAsm)
+                {
                     case 0: asm.WriteLine("     PUSH EAX"); break;
                     case 1: asm.WriteLine("     PUSH EAX"); break;
                     case 2: asm.WriteLine("     PUSH EDX"); break;
-                    case 4: break; 
+                    case 4: break;
                 }
                 s.Push(resultado);
             }
