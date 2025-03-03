@@ -240,7 +240,6 @@ namespace ASM
                     If(execute);
                     break;
                 case "while":
-<<<<<<< HEAD
                     While(execute);
                     break;
                 case "do":
@@ -248,15 +247,6 @@ namespace ASM
                     break;
                 case "for":
                     For(execute);
-=======
-                    While(ejecuta);
-                    break;
-                case "do":
-                    Do(ejecuta);
-                    break;
-                case "for":
-                    For(ejecuta);
->>>>>>> 630f8960e00599d4338000000a5719bcfffab5f5
                     break;
                 default:
                     if (Clasificacion == Tipos.TipoDato)
@@ -265,7 +255,7 @@ namespace ASM
                     }
                     else
                     {
-                        Asignacion();
+                        Asignacion(execute);
                         match(";");
                     }
                     break;
@@ -419,11 +409,7 @@ namespace ASM
 
             Expresion();
             float valor1 = s.Pop();
-<<<<<<< HEAD
             asm.WriteLine("\tPOP EBX");
-=======
-            asm.WriteLine("    POP EBX");
->>>>>>> 630f8960e00599d4338000000a5719bcfffab5f5
             string operador = Contenido;
             match(Tipos.OperadorRelacional);
 
@@ -431,18 +417,11 @@ namespace ASM
 
             Expresion();
             float valor2 = s.Pop();
-<<<<<<< HEAD
             asm.WriteLine("\tPOP EAX");
 
             asm.WriteLine("\tCMP EAX, EBX");
 
             if (!isDo)
-=======
-            asm.WriteLine("    POP EAX");
-
-            asm.WriteLine("    CMP EAX, EBX");
-            switch (operador)
->>>>>>> 630f8960e00599d4338000000a5719bcfffab5f5
             {
                 switch (operador)
                 {
@@ -515,7 +494,7 @@ namespace ASM
             asm.WriteLine(";DoWhile (condicion) ");
             string label = $"jump_do_{doWhileCounter++}";
             //NOTE - No me acuerdo que hace aqui
-            asm.WriteLine($"{label}:"); 
+            asm.WriteLine($"{label}:");
 
             match("do");
             if (Contenido == "{")
@@ -539,11 +518,11 @@ namespace ASM
         {
             match("for");
             match("(");
-            Asignacion();
+            Asignacion(execute);
             match(";");
             Condicion("");
             match(";");
-            Asignacion();
+            Asignacion(execute);
             match(")");
             if (Contenido == "{")
             {
@@ -721,13 +700,8 @@ namespace ASM
                 float resultado = 0;
                 switch (operador)
                 {
-<<<<<<< HEAD
                     case "+": resultado = n2 + n1; asm.WriteLine("\tADD EAX, EBX"); break;
                     case "-": resultado = n2 - n1; asm.WriteLine("\tSUB EAX, EBX"); break;
-=======
-                    case "+": resultado = n2 + n1; asm.WriteLine("     ADD EBX, EAX"); break;
-                    case "-": resultado = n2 - n1; asm.WriteLine("     SUB EBX, EAX"); break;
->>>>>>> 630f8960e00599d4338000000a5719bcfffab5f5
                 }
 
                 Variable.TipoDato tipoResultado = Variable.valorTipoDato(resultado, maximoTipo, huboCasteo);
@@ -754,12 +728,7 @@ namespace ASM
                 }
 
                 //Hacemos el push al final ya con el resultado
-
-<<<<<<< HEAD
                 asm.WriteLine("\tPUSH EBX");
-=======
-                asm.WriteLine("     PUSH EBX");
->>>>>>> 630f8960e00599d4338000000a5719bcfffab5f5
                 s.Push(resultado);
             }
         }
@@ -815,15 +784,9 @@ namespace ASM
 
                 switch (flagAsm)
                 {
-<<<<<<< HEAD
                     case 0: asm.WriteLine("\tPUSH EAX"); break;
                     case 1: asm.WriteLine("\tPUSH EAX"); break;
                     case 2: asm.WriteLine("\tPUSH EDX"); break;
-=======
-                    case 0: asm.WriteLine("     PUSH EAX"); break;
-                    case 1: asm.WriteLine("     PUSH EAX"); break;
-                    case 2: asm.WriteLine("     PUSH EDX"); break;
->>>>>>> 630f8960e00599d4338000000a5719bcfffab5f5
                     case 4: break;
                 }
                 s.Push(resultado);
@@ -835,7 +798,7 @@ namespace ASM
         private void Factor()
         {
             maximoTipo = Variable.TipoDato.Char;
-            
+
             // Caso 1: Si es un número
             if (Clasificacion == Tipos.Numero)
             {
