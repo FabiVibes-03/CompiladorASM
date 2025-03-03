@@ -1,56 +1,34 @@
 ;Archivo: prueba.cpp
-<<<<<<< HEAD
-;Fecha y hora: 27/02/2025 11:16:11 a. m.
-=======
-;Fecha y hora: 27/02/2025 11:13:59 a. m.
->>>>>>> 6a2af169c5eb637c2fc624efefef4bc2aba9308f
+;Fecha y hora: 03/03/2025 11:06:43 a. m.
 ;----------------------------------
 SEGMENT .TEXT
 GLOBAL main
 main:
-     MOV EAX, 0
-     PUSH EAX
-     MOV EAX, 3
-     PUSH EAX
-     MOV EAX, 5
-     PUSH EAX
-    POP EAX
-    POP EBX
-     ADD EBX, EAX
-     PUSH EBX
-     MOV EAX, 8
-     PUSH EAX
-    POP EBX
-    POP EAX
-     MUL EBX
-     PUSH EAX
-     MOV EAX, 10
-     PUSH EAX
-     MOV EAX, 4
-     PUSH EAX
-    POP EAX
-    POP EBX
-     SUB EBX, EAX
-     PUSH EBX
-     MOV EAX, 2
-     PUSH EAX
-    POP EBX
-    POP EAX
-    XOR EDX, EDX
-     DIV EBX
-     PUSH EAX
-    POP EAX
-    POP EBX
-     SUB EBX, EAX
-     PUSH EBX
-    POP 7
-     MOV EAX, 61
-     PUSH EAX
-    POP 8
+	MOV EAX, 200
+	PUSH EAX 6
+;DoWhile (condicion) 
+jump_do_1:
+	POP EAX
+	MOV [x26], EAX
 ; Asignacion de x26
-     MOV EAX, 100
-     PUSH EAX
-    POP EAX
-    MOV DWORD[x26], EAX
+	MOV EAX, x26
+	PUSH EAX
+	MOV EAX, 1
+	PUSH EAX 6
+	POP EAX
+	POP EBX
+	ADD EAX, EBX
+	PUSH EBX
+	POP EAX
+	MOV x26, EAX
+	MOV EAX, x26
+	PUSH EAX
+	POP EBX
+	MOV EAX, 211
+	PUSH EAX 6
+	POP EAX
+	CMP EAX, EBX
+	JB jump_do_1
+	RET
 SECTION .DATA
 x26 DW 0
