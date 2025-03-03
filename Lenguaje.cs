@@ -8,21 +8,16 @@
     6) Generar codigo ensamblador para if, else 
     7) Para el while
     8) P el for 
-<<<<<<< HEAD
-    9) Programar el Else 
+    9) Condicionar todos los set valor (if(execute))
     10) Usar set y get en variable 
     11) ajustar todos los constructores con parametros por default
 
 
-    Recordations:
+    //TODO - Recordations:
     Cambiar el parametro label cuando se llama condicion
     Condicionar todos los set valor (if(execute))
-=======
-    9) Condicionar todos los set valor (if(execute))
-
 
     //TODO - PARAMETRIZAR
->>>>>>> 630f8960e00599d4338000000a5719bcfffab5f5
   //!SECTION  
 */
 
@@ -49,6 +44,8 @@ namespace ASM
         Variable.TipoDato tipoCasteo = Variable.TipoDato.Char;
         //!@params
 
+
+        //SECTION - CONSTRUCTORES
         public Lenguaje() : base()
         {
             s = new Stack<float>();
@@ -65,8 +62,9 @@ namespace ASM
             maximoTipo = Variable.TipoDato.Char;
             ifCounter = whileCounter = doWhileCounter = forCounter = 1;
         }
+        //!SECTION
 
-
+        //SECTION - displayStack
         private void displayStack()
         {
             Console.WriteLine("Contenido del stack: ");
@@ -75,7 +73,9 @@ namespace ASM
                 Console.WriteLine(elemento);
             }
         }
+        //!SECTION
 
+        //SECTION - displayLista
         private void displayLista()
         {
             asm.WriteLine("SECTION .DATA");
@@ -86,7 +86,9 @@ namespace ASM
                 asm.WriteLine($"{elemento.getNombre()} DW 0");
             }
         }
+        //!SECTION
 
+        //SECTION - Programa
         //Programa  -> Librerias? Variables? Main
         public void Programa()
         {
@@ -103,7 +105,9 @@ namespace ASM
             displayLista();
         }
         //Librerias -> using ListaLibrerias; Librerias?
+        //!SECTION
 
+        //SECTION - Librerias
         private void Librerias()
         {
             match("using");
@@ -115,7 +119,9 @@ namespace ASM
             }
         }
         //Variables -> tipo_dato Lista_identificadores; Variables?
+        //!SECTION
 
+        //SECTION - Variables
         private void Variables()
         {
             Variable.TipoDato t = Variable.TipoDato.Char;
@@ -132,6 +138,8 @@ namespace ASM
                 Variables();
             }
         }
+        //!SECTION
+        //SECTION - ListaLibrerias
         //ListaLibrerias -> identificador (.ListaLibrerias)?
         private void ListaLibrerias()
         {
@@ -142,6 +150,8 @@ namespace ASM
                 ListaLibrerias();
             }
         }
+        //!SECTION
+        //SECTION - ListaIdentificadores
         //ListaIdentificadores -> identificador (= Expresion)? (,ListaIdentificadores)?
         private void ListaIdentificadores(Variable.TipoDato t)
         {
@@ -201,6 +211,8 @@ namespace ASM
                 ListaIdentificadores(t);
             }
         }
+        //!SECTION
+        //SECTION - BloqueInstrucciones
         //BloqueInstrucciones -> { listaIntrucciones? }
         private void BloqueInstrucciones(bool ejecuta)
         {
@@ -214,6 +226,8 @@ namespace ASM
                 match("}");
             }
         }
+        //!SECTION
+        //SECTION - ListaInstrucciones
         //ListaInstrucciones -> Instruccion ListaInstrucciones?
         private void ListaInstrucciones(bool ejecuta)
         {
@@ -227,7 +241,8 @@ namespace ASM
                 match("}");
             }
         }
-
+        //!SECTION
+        //SECTION - Instruccion
         //Instruccion -> console | If | While | do | For | Variables | Asignación
         private void Instruccion(bool execute)
         {
@@ -261,6 +276,7 @@ namespace ASM
                     break;
             }
         }
+        //!SECTION
         //Asignacion -> Identificador = Expresion; (DONE)
         /*
         Id++ (DONE)
@@ -365,6 +381,7 @@ namespace ASM
 
         //!SECTION
 
+        //SECTION - IF
         /*If -> if (Condicion) bloqueInstrucciones | instruccion
         (else bloqueInstrucciones | instruccion)?*/
         private void If(bool execute2)
@@ -402,6 +419,8 @@ namespace ASM
                 }
             }
         }
+        //!SECTION
+        //SECTION - Condicion
         //Condicion -> Expresion operadorRelacional Expresion
         private bool Condicion(string label, bool isDo = false)
         {
@@ -471,6 +490,8 @@ namespace ASM
             }
 
         }
+        //!SECTION
+        //SECTION - While
         //While -> while(Condicion) bloqueInstrucciones | instruccion
         private void While(bool execute)
         {
@@ -487,6 +508,8 @@ namespace ASM
                 Instruccion(execute);
             }
         }
+        //!SECTION
+        //SECTION - DO
         /*Do -> do bloqueInstrucciones | intruccion 
         while(Condicion);*/
         private void Do(bool execute)
@@ -512,6 +535,8 @@ namespace ASM
             match(")");
             match(";");
         }
+        //!SECTION
+        //SECTION - For
         /*For -> for(Asignacion; Condicion; Asignacion) 
         BloqueInstrucciones | Intruccion*/
         private void For(bool execute)
@@ -533,6 +558,8 @@ namespace ASM
                 Instruccion(execute);
             }
         }
+        //!SECTION
+        //SECTION - Console
         //Console -> Console.(WriteLine|Write) (cadena? concatenaciones?);
         private void console(bool execute)
         {
@@ -635,6 +662,8 @@ namespace ASM
                 }
             }
         }
+        //!SECTION
+        //SECTION - Concatenaciones
         // Concatenaciones -> Identificador|Cadena ( + concatenaciones )?
         private string Concatenaciones()
         {
@@ -664,6 +693,8 @@ namespace ASM
             }
             return resultado;
         }
+        //!SECTION
+        //SECTION - Main
         //Main -> static void Main(string[] args) BloqueInstrucciones 
         private void Main()
         {
@@ -678,12 +709,16 @@ namespace ASM
             match(")");
             BloqueInstrucciones(true);
         }
+        //!SECTION
+        //SECTION - Expresion
         // Expresion -> Termino MasTermino
         private void Expresion()
         {
             Termino();
             MasTermino();
         }
+        //!SECTION
+        //SECTION - MasTermino
         //MasTermino -> (OperadorTermino Termino)?
         private void MasTermino()
         {
@@ -732,12 +767,16 @@ namespace ASM
                 s.Push(resultado);
             }
         }
+        //!SECTION
+        //SECTION - Termino
         //Termino -> Factor PorFactor
         private void Termino()
         {
             Factor();
             PorFactor();
         }
+        //!SECTION
+        //SECTION - PorFactor
         //PorFactor -> (OperadorFactor Factor)?
         private void PorFactor()
         {
@@ -792,6 +831,7 @@ namespace ASM
                 s.Push(resultado);
             }
         }
+        //!SECTION
 
         //SECTION - FACTOR
         //Factor -> numero | identificador | (Expresion)
