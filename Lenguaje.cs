@@ -854,6 +854,7 @@ namespace ASM
 
                 // Agrega el número al stack
                 asm.WriteLine("\tMOV EAX, " + Contenido);
+                //NOTE - PUSH 6
                 asm.WriteLine("\tPUSH EAX 6");
                 s.Push(valor);
                 match(Tipos.Numero);
