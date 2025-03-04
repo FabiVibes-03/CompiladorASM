@@ -86,8 +86,8 @@ namespace ASM
                 asm.WriteLine(";Fecha y hora: " + ahora.ToString());
                 asm.WriteLine(";----------------------------------");
 
-                asm.WriteLine("SEGMENT .TEXT");
-                asm.WriteLine("GLOBAL main");
+                asm.WriteLine("segment .text");
+                asm.WriteLine("global main");
                 asm.WriteLine("main:");
 
             }
