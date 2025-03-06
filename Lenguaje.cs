@@ -8,7 +8,11 @@
     6) Generar codigo ensamblador para if, else 
     7) Para el while
     8) P el for 
+<<<<<<< HEAD
     9) Condicionar todos los set valor (if(execute))
+=======
+    9) Programar el Else 
+>>>>>>> Fabian
     10) Usar set y get en variable 
     11) ajustar todos los constructores con parametros por default
 
@@ -16,8 +20,11 @@
     //TODO - Recordations:
     Cambiar el parametro label cuando se llama condicion
     Condicionar todos los set valor (if(execute))
+<<<<<<< HEAD
 
     //TODO - PARAMETRIZAR
+=======
+>>>>>>> Fabian
   //!SECTION  
 */
 
@@ -78,7 +85,7 @@ namespace ASM
         //SECTION - displayLista
         private void displayLista()
         {
-            asm.WriteLine("SECTION .DATA");
+            asm.WriteLine("section .data");
             log.WriteLine("Lista de variables: ");
             foreach (Variable elemento in l)
             {
@@ -200,8 +207,9 @@ namespace ASM
                     // Como no se ingresó un número desde el Console, entonces viene de una expresión matemática
                     Expresion();
                     float resultado = s.Pop();
-                    //NOTE - Este pop se agregaba hasta el final del asm
-                    //asm.WriteLine("    POP");
+                    //NOTE - REVISAR ESTE POP
+                    asm.WriteLine("\tPOP EAX 1");
+                    asm.WriteLine($"\tMOV [{v.getNombre()}], EAX");
                     v.setValor(resultado, linea, columna, log, maximoTipo);
                 }
             }
@@ -296,9 +304,6 @@ namespace ASM
 
             float r;
             Variable? v = l.Find(variable => variable.getNombre() == Contenido);
-            //NOTE - REVISAR ESTE POP
-            asm.WriteLine("\tPOP EAX");
-            asm.WriteLine($"\tMOV [{v.getNombre()}], EAX");
             if (v == null)
             {
                 throw new Error($"Sintaxis: La variable {Contenido} no está definida", log, linea, columna);
@@ -329,8 +334,8 @@ namespace ASM
                         Expresion();
                         r = s.Pop();
                         //NOTE - Checar
-                        asm.WriteLine("\tPOP EAX");
-                        asm.WriteLine($"\tMOV {v.getNombre()}, EAX");
+                        asm.WriteLine("\tPOP EAX 1.2");
+                        asm.WriteLine($"\tMOV [{v.getNombre()}], EAX");
                         maximoTipo = Variable.valorTipoDato(r, maximoTipo, huboCasteo);
                         v.setValor(r, linea, columna, log, maximoTipo);
                     }
@@ -425,10 +430,10 @@ namespace ASM
         private bool Condicion(string label, bool isDo = false)
         {
             maximoTipo = Variable.TipoDato.Char;
-
+            //NOTE - Aqui esta el error, checar POP 7 y 8
             Expresion();
             float valor1 = s.Pop();
-            asm.WriteLine("\tPOP EBX");
+            asm.WriteLine("\tPOP EBX 7");
             string operador = Contenido;
             match(Tipos.OperadorRelacional);
 
@@ -436,8 +441,7 @@ namespace ASM
 
             Expresion();
             float valor2 = s.Pop();
-            asm.WriteLine("\tPOP EAX");
-
+            asm.WriteLine("\tPOP EAX 8");
             asm.WriteLine("\tCMP EAX, EBX");
 
             if (!isDo)
@@ -729,9 +733,9 @@ namespace ASM
                 Termino();
                 //Console.Write(operador + " ");
                 float n1 = s.Pop();
-                asm.WriteLine("\tPOP EAX");
+                asm.WriteLine("\tPOP EAX 9");
                 float n2 = s.Pop();
-                asm.WriteLine("\tPOP EBX");
+                asm.WriteLine("\tPOP EBX 10");
                 float resultado = 0;
                 switch (operador)
                 {
@@ -787,9 +791,9 @@ namespace ASM
                 Factor();
                 //Console.Write(operador + " ");
                 float n1 = s.Pop();
-                asm.WriteLine("\tPOP EBX");
+                asm.WriteLine("\tPOP EBX 11");
                 float n2 = s.Pop();
-                asm.WriteLine("\tPOP EAX");
+                asm.WriteLine("\tPOP EAX 12");
 
                 float resultado = 0;
                 int flagAsm = 4;
@@ -854,8 +858,12 @@ namespace ASM
 
                 // Agrega el número al stack
                 asm.WriteLine("\tMOV EAX, " + Contenido);
+<<<<<<< HEAD
                 //NOTE - PUSH 6
                 asm.WriteLine("\tPUSH EAX 6");
+=======
+                asm.WriteLine("\tPUSH EAX");
+>>>>>>> Fabian
                 s.Push(valor);
                 match(Tipos.Numero);
             }
@@ -877,7 +885,7 @@ namespace ASM
 
                 // Agrega el valor de la variable al stack
                 s.Push(v.getValor());
-                asm.WriteLine("\tMOV EAX, " + Contenido);
+                asm.WriteLine($"\tMOV EAX, [{Contenido}]");
                 asm.WriteLine("\tPUSH EAX");
                 match(Tipos.Identificador);
             }
@@ -908,7 +916,7 @@ namespace ASM
                 if (huboCasteo)
                 {
                     float valor = s.Pop();
-                    asm.WriteLine("\tPOP");
+                    asm.WriteLine("\tPOP 13");
 
                     switch (tipoCasteo)
                     {
