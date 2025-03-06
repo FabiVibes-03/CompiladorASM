@@ -433,7 +433,7 @@ namespace ASM
             //NOTE - Aqui esta el error, checar POP 7 y 8
             Expresion();
             float valor1 = s.Pop();
-            asm.WriteLine("\tPOP EBX 7");
+            
             string operador = Contenido;
             match(Tipos.OperadorRelacional);
 
@@ -441,6 +441,7 @@ namespace ASM
 
             Expresion();
             float valor2 = s.Pop();
+            asm.WriteLine("\tPOP EBX 7");
             asm.WriteLine("\tPOP EAX 8");
             asm.WriteLine("\tCMP EAX, EBX");
 
@@ -767,7 +768,7 @@ namespace ASM
                 }
 
                 //Hacemos el push al final ya con el resultado
-                asm.WriteLine("\tPUSH EBX");
+                asm.WriteLine("\tPUSH EAX");
                 s.Push(resultado);
             }
         }
@@ -858,12 +859,8 @@ namespace ASM
 
                 // Agrega el número al stack
                 asm.WriteLine("\tMOV EAX, " + Contenido);
-<<<<<<< HEAD
                 //NOTE - PUSH 6
                 asm.WriteLine("\tPUSH EAX 6");
-=======
-                asm.WriteLine("\tPUSH EAX");
->>>>>>> Fabian
                 s.Push(valor);
                 match(Tipos.Numero);
             }
