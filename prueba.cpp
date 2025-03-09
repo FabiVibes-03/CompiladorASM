@@ -5,11 +5,12 @@ using System.Threading.Tasks;
 
 static void Main(string[] args)
 {
-  int x26 = 200;
+  int x26 = 0;
 
-  do {
-    x26 = x26 + 1;
-  } while(x26 < 211);
+  while (x26 < 10) 
+{
+    x26 += 1;
+}
 
   /*if(1 > 2) {
     x26 = 100;

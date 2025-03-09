@@ -1,34 +1,29 @@
 ;Archivo: prueba.cpp
-;Fecha y hora: 06/03/2025 11:52:23 a. m.
+;Fecha y hora: 09/03/2025 05:49:43 p. m.
 ;----------------------------------
 segment .text
 global main
 main:
-	MOV EAX, 200
+	MOV EAX, 0
 	PUSH EAX 6
 	POP EAX 1
 	MOV [x26], EAX
-;DoWhile (condicion) 
-jump_do_1:
-; Asignacion de x26
+while_1:
 	MOV EAX, [x26]
 	PUSH EAX
-	MOV EAX, 1
-	PUSH EAX 6
-	POP EAX 9
-	POP EBX 10
-	ADD EAX, EBX
-	PUSH EAX
-	POP EAX 1.2
-	MOV [x26], EAX
-	MOV EAX, [x26]
-	PUSH EAX
-	MOV EAX, 211
+	MOV EAX, 10
 	PUSH EAX 6
 	POP EBX 7
 	POP EAX 8
 	CMP EAX, EBX
-	JB jump_do_1
+	JGE end_while_1
+	MOV EAX, 1
+	PUSH EAX 6
+; x26 += Expresion
+	POP EAX
+	ADD [x26], EAX
+	JMP while_1
+end_while_1:
 	RET
 section .data
 x26 DW 0
