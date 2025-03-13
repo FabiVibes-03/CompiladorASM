@@ -11,9 +11,9 @@ namespace ASM
         {
             Char, Int, Float
         }
-        TipoDato tipo;
-        string nombre;
-        float valor;
+        private TipoDato tipo;
+        private string nombre;
+        private float valor;
         public Variable(TipoDato tipo, string nombre, float valor = 0)
         {
             this.tipo = tipo;
@@ -35,17 +35,18 @@ namespace ASM
         }
         //!SECTION
 
-        public float getValor()
+        public float Valor
         {
-            return valor;
+            get => valor;
         }
-        public string getNombre()
+        public string Nombre
         {
-            return nombre;
+            get => nombre;
+            set => nombre = value;
         }
-        public TipoDato GetTipoDato()
+        public TipoDato Tipo
         {
-            return tipo;
+            get => tipo;
         }
         public static TipoDato valorTipoDato(float valor, TipoDato maxTipo,bool Casteo = false)
         {
