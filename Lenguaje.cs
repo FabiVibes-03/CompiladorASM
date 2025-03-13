@@ -6,10 +6,10 @@
     4.- Generar codigo ensamblador para Console.Write y Console.WriteLine
     5.- Generar codigo ensamblador para Console.Read y Console.ReadLine
     6.- Programar el While (Listo)
-    7.-Programar el For
-    8.-Programar else
-    9.- Usar set y get en variables
-    10.- Ajustar todos los parametros por default
+    7.- Programar el For (Listo)
+    8.- Programar else (Listo)
+    9.- Usar set y get en variables //NOTE - Volverlo a hacer en variable
+    10.- Ajustar todos los parametros por default 
   //!SECTION  
 */
 
@@ -28,7 +28,8 @@ namespace ASM
 
         //@params GLOBALES
 
-        private int ifCounter, whileCounter, doWhileCounter, forCounter;
+        private int ifCounter, whileCounter, doWhileCounter, forCounter, msgCounter;
+        public bool isConsoleRead;
         Stack<float> s;
         List<Variable> l;
         Variable.TipoDato maximoTipo;
@@ -44,7 +45,8 @@ namespace ASM
             l = new List<Variable>();
             log.WriteLine("Constructor lenguaje");
             maximoTipo = Variable.TipoDato.Char;
-            ifCounter = whileCounter = doWhileCounter = forCounter = 1;
+            ifCounter = whileCounter = doWhileCounter = forCounter = msgCounter = 1;
+            isConsoleRead = false;
         }
         public Lenguaje(string nombre) : base(nombre)
         {
@@ -52,7 +54,8 @@ namespace ASM
             l = new List<Variable>();
             log.WriteLine("Constructor lenguaje");
             maximoTipo = Variable.TipoDato.Char;
-            ifCounter = whileCounter = doWhileCounter = forCounter = 1;
+            ifCounter = whileCounter = doWhileCounter = forCounter = msgCounter = 1;
+            isConsoleRead = false;
         }
         //!SECTION
 
@@ -74,20 +77,20 @@ namespace ASM
             log.WriteLine("Lista de variables: ");
             foreach (Variable elemento in l)
             {
-                switch (elemento.GetTipoDato())
+                switch (elemento.Tipo)
                 {
                     //NOTE - Requerimiento 1
                     case Variable.TipoDato.Char:
-                        log.WriteLine($"{elemento.getNombre()} {elemento.GetTipoDato()} {elemento.getValor()}");
-                        asm.WriteLine($"{elemento.getNombre()} DB 0");
+                        log.WriteLine($"{elemento.Nombre} {elemento.Tipo} {elemento.Valor}");
+                        asm.WriteLine($"{elemento.Nombre} DB 0");
                         break;
                     case Variable.TipoDato.Int:
-                        log.WriteLine($"{elemento.getNombre()} {elemento.GetTipoDato()} {elemento.getValor()}");
-                        asm.WriteLine($"{elemento.getNombre()} DW 0");
+                        log.WriteLine($"{elemento.Nombre} {elemento.Tipo} {elemento.Valor}");
+                        asm.WriteLine($"{elemento.Nombre} DD 0");
                         break;
                     case Variable.TipoDato.Float:
-                        log.WriteLine($"{elemento.getNombre()} {elemento.GetTipoDato()} {elemento.getValor()}");
-                        asm.WriteLine($"{elemento.getNombre()} DD 0.0");
+                        log.WriteLine($"{elemento.Nombre} {elemento.Tipo} {elemento.Valor}");
+                        asm.WriteLine($"{elemento.Nombre} DD 0.0");
                         break;
                 }
             }
@@ -161,7 +164,7 @@ namespace ASM
         //ListaIdentificadores -> identificador (= Expresion)? (,ListaIdentificadores)?
         private void ListaIdentificadores(Variable.TipoDato t)
         {
-            if (l.Find(variable => variable.getNombre() == Contenido) != null)
+            if (l.Find(variable => variable.Nombre == Contenido) != null)
             {
                 throw new Error($"La variable {Contenido} ya existe", log, linea, columna);
             }
@@ -207,8 +210,8 @@ namespace ASM
                     Expresion();
                     float resultado = s.Pop();
                     //NOTE - REVISAR ESTE POP
-                    asm.WriteLine("\tPOP EAX 1");
-                    asm.WriteLine($"\tMOV [{v.getNombre()}], EAX");
+                    asm.WriteLine("\tPOP EAX");
+                    asm.WriteLine($"\tMOV [{v.Nombre}], EAX");
                     v.setValor(resultado, linea, columna, log, maximoTipo);
                 }
             }
@@ -302,7 +305,7 @@ namespace ASM
             maximoTipo = Variable.TipoDato.Char;
 
             float r;
-            Variable? v = l.Find(variable => variable.getNombre() == Contenido);
+            Variable? v = l.Find(variable => variable.Nombre == Contenido);
             if (v == null)
             {
                 throw new Error($"Sintaxis: La variable {Contenido} no está definida", log, linea, columna);
@@ -314,15 +317,19 @@ namespace ASM
             {
                 case "++":
                     match("++");
-                    asm.WriteLine($"; Incremento variable: {v.getNombre()}");
-                    asm.WriteLine($"\tINC [{v.getNombre()}]");
+                    asm.WriteLine($"; Incremento variable: {v.Nombre}");
+                    asm.WriteLine($"\tMOV AX, [{v.Nombre}]"); // Carga el valor en AX
+                    asm.WriteLine($"\tADD AX, 1"); // Suma 1
+                    asm.WriteLine($"\tMOV [{v.Nombre}], AX");
                     r = v.getValor() + 1;
                     v.setValor(r, linea, columna, log, maximoTipo);
                     break;
                 case "--":
                     match("--");
-                    asm.WriteLine($"; Decremento variable: {v.getNombre()}");
-                    asm.WriteLine($"\tDEC [{v.getNombre()}]");
+                    asm.WriteLine($"; Decremento variable: {v.Nombre}");
+                    asm.WriteLine($"\tMOV AX, [{v.Nombre}]"); // Carga el valor en AX
+                    asm.WriteLine($"\tSUB AX, 1"); // Resta 1
+                    asm.WriteLine($"\tMOV [{v.Nombre}], AX");
                     r = v.getValor() - 1;
                     v.setValor(r, linea, columna, log, maximoTipo);
                     break;
@@ -330,26 +337,26 @@ namespace ASM
                     match("=");
                     if (Contenido == "Console")
                     {
-                        ListaIdentificadores(v.GetTipoDato()); // Ya se hace este procedimiento arriba así que simplemente obtenemos a través del método lo que necesitamos
+                        ListaIdentificadores(v.Tipo); // Ya se hace este procedimiento arriba así que simplemente obtenemos a través del método lo que necesitamos
                     }
                     else
                     {
-                        asm.WriteLine($"; Asignacion de {v.getNombre()}");
+                        asm.WriteLine($"; Asignacion de {v.Nombre}");
                         Expresion();
                         r = s.Pop();
                         //REVIEW - Depende del tipo de dato se usa cierta instruccion
-                        asm.WriteLine("\tPOP EAX 1.2");
+                        asm.WriteLine("\tPOP EAX");
 
-                        switch (v.GetTipoDato())
+                        switch (v.Tipo)
                         {
                             case Variable.TipoDato.Char:
-                                asm.WriteLine($"\tMOV BYTE PTR [{v.getNombre()}], AL");
+                                asm.WriteLine($"\tMOV BYTE [{v.Nombre}], AL");
                                 break;
                             case Variable.TipoDato.Int:
-                                asm.WriteLine($"\tMOV WORD PTR [{v.getNombre()}], AX");
+                                asm.WriteLine($"\tMOV WORD [{v.Nombre}], AX"); //REVIEW - Checar este AX
                                 break;
                             case Variable.TipoDato.Float:
-                                asm.WriteLine($"\tMOV DWORD PTR [{v.getNombre()}], EAX");
+                                asm.WriteLine($"\tMOV DWORD [{v.Nombre}], EAX");
                                 break;
                         }
                         maximoTipo = Variable.valorTipoDato(r, maximoTipo, huboCasteo);
@@ -361,9 +368,9 @@ namespace ASM
                     match("+=");
                     Expresion();
                     r = v.getValor() + s.Pop();
-                    asm.WriteLine($"; {v.getNombre()} += Expresion");
+                    asm.WriteLine($"; {v.Nombre} += Expresion");
                     asm.WriteLine("\tPOP EAX");
-                    asm.WriteLine($"\tADD [{v.getNombre()}], EAX"); // Sumar directamente en memoria
+                    asm.WriteLine($"\tADD [{v.Nombre}], EAX"); // Sumar directamente en memoria
                     maximoTipo = Variable.valorTipoDato(r, maximoTipo, huboCasteo);
                     v.setValor(r, linea, columna, log, maximoTipo);
                     break;
@@ -371,9 +378,9 @@ namespace ASM
                     match("-=");
                     Expresion();
                     r = v.getValor() - s.Pop();
-                    asm.WriteLine($"; {v.getNombre()} -= Expresion");
+                    asm.WriteLine($"; {v.Nombre} -= Expresion");
                     asm.WriteLine("\tPOP EAX");
-                    asm.WriteLine($"\tSUB [{v.getNombre()}], EAX"); // Restar directamente en memoria
+                    asm.WriteLine($"\tSUB [{v.Nombre}], EAX"); // Restar directamente en memoria
                     maximoTipo = Variable.valorTipoDato(r, maximoTipo, huboCasteo);
                     v.setValor(r, linea, columna, log, maximoTipo);
                     break;
@@ -381,11 +388,11 @@ namespace ASM
                     match("*=");
                     Expresion();
                     r = v.getValor() * s.Pop();
-                    asm.WriteLine($"; {v.getNombre()} *= Expresion");
+                    asm.WriteLine($"; {v.Nombre} *= Expresion");
                     asm.WriteLine("\tPOP EBX");
-                    asm.WriteLine($"\tMOV EAX, [{v.getNombre()}]");
+                    asm.WriteLine($"\tMOV EAX, [{v.Nombre}]");
                     asm.WriteLine("\tMUL EBX");  // Multiplicacion
-                    asm.WriteLine($"\tMOV [{v.getNombre()}], EAX");
+                    asm.WriteLine($"\tMOV [{v.Nombre}], EAX");
                     maximoTipo = Variable.valorTipoDato(r, maximoTipo, huboCasteo);
                     v.setValor(r, linea, columna, log, maximoTipo);
                     break;
@@ -393,13 +400,13 @@ namespace ASM
                     match("/=");
                     Expresion();
                     r = v.getValor() / s.Pop();
-                    asm.WriteLine($"; {v.getNombre()} /= Expresion");
+                    asm.WriteLine($"; {v.Nombre} /= Expresion");
 
                     asm.WriteLine("\tPOP EBX");
                     asm.WriteLine("\tMOV EAX, [{v.getNombre()}]");
                     asm.WriteLine("\tXOR EDX, EDX"); // Limpiar registros
                     asm.WriteLine("\tDIV EBX");  // Division -> resultado = EAX y residuo = EDX
-                    asm.WriteLine($"\tMOV [{v.getNombre()}], EAX");
+                    asm.WriteLine($"\tMOV [{v.Nombre}], EAX");
                     maximoTipo = Variable.valorTipoDato(r, maximoTipo, huboCasteo);
                     v.setValor(r, linea, columna, log, maximoTipo);
                     break;
@@ -407,12 +414,12 @@ namespace ASM
                     match("%=");
                     Expresion();
                     r = v.getValor() % s.Pop();
-                    asm.WriteLine($"; {v.getNombre()} %= Expresion");
+                    asm.WriteLine($"; {v.Nombre} %= Expresion");
                     asm.WriteLine("\tPOP EBX");
                     asm.WriteLine("\tMOV EAX, [{v.getNombre()}]");
                     asm.WriteLine("\tXOR EDX, EDX"); //Limpiar registros
                     asm.WriteLine("\tDIV EBX");  // Division -> resultado = EAX y residuo = EDX
-                    asm.WriteLine($"\tMOV [{v.getNombre()}], EDX");
+                    asm.WriteLine($"\tMOV [{v.Nombre}], EDX");
                     maximoTipo = Variable.valorTipoDato(r, maximoTipo, huboCasteo);
                     v.setValor(r, linea, columna, log, maximoTipo);
                     break;
@@ -430,8 +437,10 @@ namespace ASM
             match("if");
             match("(");
 
-            asm.WriteLine(" if (condicion) ");
-            string label = $"jump_if_{ifCounter++}";
+            asm.WriteLine("; if (condicion) ");
+            string label = $"jump_if_else_{ifCounter}";
+            string labelEndIf = $"jump_end_if_{ifCounter}";
+            ifCounter++;
 
             bool execute = Condicion(label) && execute2;
             match(")");
@@ -444,6 +453,7 @@ namespace ASM
                 Instruccion(execute);
             }
 
+            asm.WriteLine($"\tjmp {labelEndIf}");
             asm.WriteLine($"{label}:");
 
             if (Contenido == "else")
@@ -459,6 +469,7 @@ namespace ASM
                     Instruccion(executeElse);
                 }
             }
+            asm.WriteLine($"{labelEndIf}:");
         }
         //!SECTION
         //SECTION - Condicion
@@ -466,7 +477,6 @@ namespace ASM
         private bool Condicion(string label, bool isDo = false)
         {
             maximoTipo = Variable.TipoDato.Char;
-            //NOTE - Aqui esta el error, checar POP 7 y 8
             Expresion();
             float valor1 = s.Pop();
 
@@ -477,8 +487,8 @@ namespace ASM
 
             Expresion();
             float valor2 = s.Pop();
-            asm.WriteLine("\tPOP EBX 7");
-            asm.WriteLine("\tPOP EAX 8");
+            asm.WriteLine("\tPOP EBX");
+            asm.WriteLine("\tPOP EAX");
             asm.WriteLine("\tCMP EAX, EBX");
 
             if (!isDo)
@@ -548,11 +558,11 @@ namespace ASM
             match(")");
             if (Contenido == "{")
             {
-                BloqueInstrucciones(execute);
+                BloqueInstrucciones(condicionValida);
             }
             else
             {
-                Instruccion(execute);
+                Instruccion(condicionValida);
             }
 
             asm.WriteLine($"\tJMP {inicioWhile}"); // Regresa al inicio del while
@@ -593,125 +603,121 @@ namespace ASM
         {
             match("for");
             match("(");
+
             Asignacion(execute);
             match(";");
-            Condicion("");
+
+            string etiquetaInicio = $"for_{forCounter}";
+            string etiquetaFin = $"end_for_{forCounter}";
+            forCounter++;
+
+            asm.WriteLine($"{etiquetaInicio}:");
+
+            bool condicionValida = Condicion(etiquetaFin);
             match(";");
-            Asignacion(execute);
+
+            string[] tokensIncremento = CapturarIncrementoTokens();
             match(")");
+
             if (Contenido == "{")
             {
-                BloqueInstrucciones(execute);
+                BloqueInstrucciones(condicionValida);
             }
             else
             {
-                Instruccion(execute);
+                Instruccion(condicionValida);
             }
+
+            ProcesarIncremento(execute, tokensIncremento);
+            asm.WriteLine($"\tjmp {etiquetaInicio}");
+            asm.WriteLine($"{etiquetaFin}:");
         }
         //!SECTION
         //SECTION - Console
         //Console -> Console.(WriteLine|Write) (cadena? concatenaciones?);
         private void console(bool execute)
         {
-            bool console = false;
-            bool isRead = false;
-            string content = "";
-
             match("Console");
             match(".");
 
+            bool saltoLinea = false;
+            isConsoleRead = false;
+
+
             switch (Contenido)
             {
-                case "Write":
-                    console = true;
-                    match("Write");
-                    break;
-                case "Read":
-                    isRead = true;
-                    match("Read");
-                    break;
-                case "ReadLine":
-                    isRead = true;
-                    match("ReadLine");
-                    break;
-                default:
+                case "WriteLine":
+                    saltoLinea = true;
                     match("WriteLine");
                     break;
+                case "Write":
+                    match("Write");
+                    break;
+                case "ReadLine":
+                    isConsoleRead = true;
+                    match("ReadLine");
+                    break;
+                case "Read":
+                    isConsoleRead = true;
+                    match("Read");
+                    break;
+                default:
+                    throw new Error("Sintaxis: Se esperaba Write o WriteLine", log, linea, columna);
             }
 
             match("(");
 
-            if (!isRead && Contenido != ")")
+            if (!isConsoleRead)
             {
-
                 if (Clasificacion == Tipos.Cadena)
-                {
-                    if (execute)
-                    {
-                        Console.Write(Contenido.ToString().Replace('"', ' '));
-                    }
-                    match(Tipos.Cadena);
-                }
-                else
-                {
-                    string nomV = Contenido;
-                    match(Tipos.Identificador);
-                    Variable v = l.Find(variable => variable.getNombre() == nomV);
-
-                    if (v == null)
-                    {
-                        throw new Error("La variable no existe", log, linea, columna);
-                    }
-                    if (execute)
-                    {
-                        //? Por alguna razón sigue imprimiendo en float REVISAR
-                        Console.Write(((int)v.getValor()).ToString());
-                    }
-                    //match(v.getValor().ToString());
-                }
-            }
-
-            if (Contenido == "+")
             {
-                match("+");
-                Concatenaciones();
+                string label = $"msg_{msgCounter++}";
+                asm.WriteLine($"; Imprimiendo cadena: {Contenido}");
+
+                // Se define la cadena en la sección de datos
+                asm.WriteLine("section .data");
+                string literal = Contenido.Replace("\"", "");
+                asm.WriteLine($"{label} db \"{literal}\", 0");
+
+                // Se vuelve a la sección de texto y se invoca la macro PRINT_STRING
+                asm.WriteLine("segment .text");
+                asm.WriteLine($"\tPRINT_STRING {label}");
+                match(Tipos.Cadena);
             }
+            else if (Clasificacion == Tipos.Identificador)
+            {
+                Variable? v = l.Find(variable => variable.Nombre == Contenido);
+                if (v == null)
+                {
+                    throw new Error("La variable no existe", log, linea, columna);
+                }
+
+                asm.WriteLine($"; Imprimiendo variable: {v.Nombre}");
+                asm.WriteLine($"\tMOV EAX, [{v.Nombre}]");
+                asm.WriteLine("\tPRINT_UDEC 4, EAX"); // Usar macro PRINT_DEC para imprimir números
+
+                match(Tipos.Identificador);
+            }
+            }
+            
 
             match(")");
             match(";");
 
-            int num;
-
-
-            if (isRead)
+            if (!isConsoleRead)
             {
-                switch (Contenido)
+                if (saltoLinea)
                 {
-                    case "ReadLine":
-                        content = Console.ReadLine();
-                        break;
-                    case "Read":
-                        content = Console.Read().ToString();
-                        break;
-                }
-
-                if (!int.TryParse(content, out num))
-                {
-                    throw new Error("Error: La entrada no es un número válido.", log, linea, columna);
+                    asm.WriteLine("\tNEWLINE");
                 }
             }
-
-
-
-            if (!isRead && execute)
+            else
             {
-                switch (console)
-                {
-                    case true: Console.Write(content); break;
-                    case false: Console.WriteLine(content); break;
-                }
+                // Para lectura, se genera la instrucción GET_DEC para leer un entero de 4 bytes
+                asm.WriteLine("\tGET_DEC 4, eax");
             }
         }
+
         //!SECTION
         //SECTION - Concatenaciones
         // Concatenaciones -> Identificador|Cadena ( + concatenaciones )?
@@ -720,7 +726,7 @@ namespace ASM
             string resultado = "";
             if (Clasificacion == Tipos.Identificador)
             {
-                Variable? v = l.Find(variable => variable.getNombre() == Contenido);
+                Variable? v = l.Find(variable => variable.Nombre == Contenido);
                 if (v != null)
                 {
                     resultado = v.getValor().ToString(); // Obtener el valor de la variable y convertirla
@@ -779,9 +785,9 @@ namespace ASM
                 Termino();
                 //Console.Write(operador + " ");
                 float n1 = s.Pop();
-                asm.WriteLine("\tPOP EAX 9");
+                asm.WriteLine("\tPOP EAX");
                 float n2 = s.Pop();
-                asm.WriteLine("\tPOP EBX 10");
+                asm.WriteLine("\tPOP EBX");
                 float resultado = 0;
                 switch (operador)
                 {
@@ -837,9 +843,9 @@ namespace ASM
                 Factor();
                 //Console.Write(operador + " ");
                 float n1 = s.Pop();
-                asm.WriteLine("\tPOP EBX 11");
+                asm.WriteLine("\tPOP EBX");
                 float n2 = s.Pop();
-                asm.WriteLine("\tPOP EAX 12");
+                asm.WriteLine("\tPOP EAX");
 
                 float resultado = 0;
                 int flagAsm = 4;
@@ -892,7 +898,7 @@ namespace ASM
             // Caso 1: Si es un número
             if (Clasificacion == Tipos.Numero)
             {
-                Variable? v = l.Find(variable => variable.getNombre() == Contenido);
+                Variable? v = l.Find(variable => variable.Nombre == Contenido);
                 //Contenido lo pasamos a valor
                 float valor = float.Parse(Contenido);
                 Variable.TipoDato tipoValor = Variable.valorTipoDato(valor, maximoTipo, huboCasteo);
@@ -905,7 +911,7 @@ namespace ASM
                 // Agrega el número al stack
                 asm.WriteLine("\tMOV EAX, " + Contenido);
                 //NOTE - PUSH 6
-                asm.WriteLine("\tPUSH EAX 6");
+                asm.WriteLine("\tPUSH EAX");
                 s.Push(valor);
                 match(Tipos.Numero);
             }
@@ -913,16 +919,16 @@ namespace ASM
             else if (Clasificacion == Tipos.Identificador)
             {
                 // Busca la variable en la lista de variables
-                Variable? v = l.Find(variable => variable.getNombre() == Contenido);
+                Variable? v = l.Find(variable => variable.Nombre == Contenido);
                 if (v == null)
                 {
                     throw new Error("Sintaxis: la variable " + Contenido + " no está definida", log, linea, columna);
                 }
 
                 // Actualiza el tipo máximo si es necesario
-                if (maximoTipo < v.GetTipoDato())
+                if (maximoTipo < v.Tipo)
                 {
-                    maximoTipo = v.GetTipoDato();
+                    maximoTipo = v.Tipo;
                 }
 
                 // Agrega el valor de la variable al stack
@@ -958,7 +964,7 @@ namespace ASM
                 if (huboCasteo)
                 {
                     float valor = s.Pop();
-                    asm.WriteLine("\tPOP 13");
+                    asm.WriteLine("\tPOP");
 
                     switch (tipoCasteo)
                     {
@@ -972,14 +978,68 @@ namespace ASM
                     }
                     //Obligamos el casteo
                     maximoTipo = tipoCasteo;
-                    asm.WriteLine("\tPUSH 8");
+                    asm.WriteLine("\tPUSH");
                     s.Push(valor);
                 }
                 match(")");
             }
         }
+        // Método auxiliar token
+        private string[] CapturarIncrementoTokens()
+        {
+            List<string> tokensIncremento = new List<string>();
 
-        
+            while (Contenido != ")")
+            {
+                tokensIncremento.Add(Contenido);
+                nextToken();
+            }
+            return tokensIncremento.ToArray();
+        }
+
+        // Método auxiliar
+        private void ProcesarIncremento(bool execute, string[] tokensIncremento)
+        {
+            if (tokensIncremento.Length == 2)
+            {
+                string varName = tokensIncremento[0];
+                string op = tokensIncremento[1];
+
+                Variable? v = l.Find(variable => variable.Nombre == varName);
+                if (v == null)
+                {
+                    throw new Error($"Sintaxis: La variable {varName} no está definida", log, linea, columna);
+                }
+                switch (op)
+                {
+                    case "++":
+                        asm.WriteLine($"; Incremento variable: {v.Nombre} usando ADD");
+                        asm.WriteLine($"\tmov eax, [{v.Nombre}]");
+                        asm.WriteLine($"\tadd eax, 1");
+                        asm.WriteLine($"\tmov [{v.Nombre}], eax");
+                        float r = v.getValor() + 1;
+                        v.setValor(r, linea, columna, log, Variable.valorTipoDato(r, maximoTipo));
+                        break;
+                    case "--":
+                        asm.WriteLine($"; Decremento variable: {v.Nombre} usando SUB");
+                        asm.WriteLine($"\tmov eax, [{v.Nombre}]");
+                        asm.WriteLine($"\tsub eax, 1");
+                        asm.WriteLine($"\tmov [{v.Nombre}], eax");
+                        r = v.getValor() - 1;
+                        v.setValor(r, linea, columna, log, Variable.valorTipoDato(r, maximoTipo));
+                        break;
+                    default:
+                        throw new Error($"Sintaxis: Incremento no reconocido: {op}", log, linea, columna);
+                }
+            }
+            else
+            {
+                string expr = string.Join(" ", tokensIncremento);
+                Contenido = expr;
+                Asignacion(execute);
+            }
+        }
+
         /*SNT = Producciones = Invocar el metodo
         ST  = Tokens (Contenido | Classification) = Invocar match    Variables -> tipo_dato Lista_identificadores; Variables?*/
     }
