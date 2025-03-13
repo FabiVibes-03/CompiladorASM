@@ -1,14 +1,14 @@
 /*
     //SECTION REQUERIMIENTOS:
-    1.- Declarar las variables en ensamblador con su tipo de dato (Listo)
-    2.- En la asignacion generar codigo en ensamblador para ++(inc) --(dec) (Listo)
-    3.- Para +=, -= (Listo)
+    //*1.- Declarar las variables en ensamblador con su tipo de dato (Listo)
+    //*2.- En la asignacion generar codigo en ensamblador para ++(inc) --(dec) (Listo)
+    //*3.- Para +=, -= (Listo)
     4.- Generar codigo ensamblador para Console.Write y Console.WriteLine
     5.- Generar codigo ensamblador para Console.Read y Console.ReadLine
-    6.- Programar el While (Listo)
-    7.- Programar el For (Listo)
-    8.- Programar else (Listo)
-    9.- Usar set y get en variables //NOTE - Volverlo a hacer en variable
+    //*6.- Programar el While (Listo)
+    //*7.- Programar el For (Listo)
+    //*8.- Programar else (Listo)
+    //*9.- Usar set y get en variables (Listo)
     10.- Ajustar todos los parametros por default 
   //!SECTION  
 */
@@ -321,7 +321,7 @@ namespace ASM
                     asm.WriteLine($"\tMOV AX, [{v.Nombre}]"); // Carga el valor en AX
                     asm.WriteLine($"\tADD AX, 1"); // Suma 1
                     asm.WriteLine($"\tMOV [{v.Nombre}], AX");
-                    r = v.getValor() + 1;
+                    r = v.Valor + 1;
                     v.setValor(r, linea, columna, log, maximoTipo);
                     break;
                 case "--":
@@ -330,7 +330,7 @@ namespace ASM
                     asm.WriteLine($"\tMOV AX, [{v.Nombre}]"); // Carga el valor en AX
                     asm.WriteLine($"\tSUB AX, 1"); // Resta 1
                     asm.WriteLine($"\tMOV [{v.Nombre}], AX");
-                    r = v.getValor() - 1;
+                    r = v.Valor - 1;
                     v.setValor(r, linea, columna, log, maximoTipo);
                     break;
                 case "=":
@@ -367,7 +367,7 @@ namespace ASM
                 case "+=":
                     match("+=");
                     Expresion();
-                    r = v.getValor() + s.Pop();
+                    r = v.Valor + s.Pop();
                     asm.WriteLine($"; {v.Nombre} += Expresion");
                     asm.WriteLine("\tPOP EAX");
                     asm.WriteLine($"\tADD [{v.Nombre}], EAX"); // Sumar directamente en memoria
@@ -377,7 +377,7 @@ namespace ASM
                 case "-=":
                     match("-=");
                     Expresion();
-                    r = v.getValor() - s.Pop();
+                    r = v.Valor - s.Pop();
                     asm.WriteLine($"; {v.Nombre} -= Expresion");
                     asm.WriteLine("\tPOP EAX");
                     asm.WriteLine($"\tSUB [{v.Nombre}], EAX"); // Restar directamente en memoria
@@ -387,7 +387,7 @@ namespace ASM
                 case "*=":
                     match("*=");
                     Expresion();
-                    r = v.getValor() * s.Pop();
+                    r = v.Valor * s.Pop();
                     asm.WriteLine($"; {v.Nombre} *= Expresion");
                     asm.WriteLine("\tPOP EBX");
                     asm.WriteLine($"\tMOV EAX, [{v.Nombre}]");
@@ -399,7 +399,7 @@ namespace ASM
                 case "/=":
                     match("/=");
                     Expresion();
-                    r = v.getValor() / s.Pop();
+                    r = v.Valor / s.Pop();
                     asm.WriteLine($"; {v.Nombre} /= Expresion");
 
                     asm.WriteLine("\tPOP EBX");
@@ -413,7 +413,7 @@ namespace ASM
                 case "%=":
                     match("%=");
                     Expresion();
-                    r = v.getValor() % s.Pop();
+                    r = v.Valor % s.Pop();
                     asm.WriteLine($"; {v.Nombre} %= Expresion");
                     asm.WriteLine("\tPOP EBX");
                     asm.WriteLine("\tMOV EAX, [{v.getNombre()}]");
@@ -729,7 +729,7 @@ namespace ASM
                 Variable? v = l.Find(variable => variable.Nombre == Contenido);
                 if (v != null)
                 {
-                    resultado = v.getValor().ToString(); // Obtener el valor de la variable y convertirla
+                    resultado = v.Valor.ToString(); // Obtener el valor de la variable y convertirla
                 }
                 else
                 {
@@ -932,7 +932,7 @@ namespace ASM
                 }
 
                 // Agrega el valor de la variable al stack
-                s.Push(v.getValor());
+                s.Push(v.Valor);
                 asm.WriteLine($"\tMOV EAX, [{Contenido}]");
                 asm.WriteLine("\tPUSH EAX");
                 match(Tipos.Identificador);
@@ -1017,7 +1017,7 @@ namespace ASM
                         asm.WriteLine($"\tmov eax, [{v.Nombre}]");
                         asm.WriteLine($"\tadd eax, 1");
                         asm.WriteLine($"\tmov [{v.Nombre}], eax");
-                        float r = v.getValor() + 1;
+                        float r = v.Valor + 1;
                         v.setValor(r, linea, columna, log, Variable.valorTipoDato(r, maximoTipo));
                         break;
                     case "--":
@@ -1025,7 +1025,7 @@ namespace ASM
                         asm.WriteLine($"\tmov eax, [{v.Nombre}]");
                         asm.WriteLine($"\tsub eax, 1");
                         asm.WriteLine($"\tmov [{v.Nombre}], eax");
-                        r = v.getValor() - 1;
+                        r = v.Valor - 1;
                         v.setValor(r, linea, columna, log, Variable.valorTipoDato(r, maximoTipo));
                         break;
                     default:
