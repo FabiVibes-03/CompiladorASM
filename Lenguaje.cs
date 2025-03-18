@@ -644,95 +644,95 @@ namespace ASM
         {
             {
                 //bool console = false;
-            bool isRead = false;
+                bool isRead = false;
                 //string content = "";
 
-            match("Console");
-            match(".");
+                match("Console");
+                match(".");
 
-            switch (Contenido)
-            {
-                case "Write":
+                switch (Contenido)
+                {
+                    case "Write":
                         //console = true;
-                    match("Write");
-                    break;
-                case "Read":
-                    isRead = true;
-                    match("Read");
-                    match("(");
-                    match(")");
-                    if (execute)
-                    {
-                        asm.WriteLine("; Leyendo un caracter");
-                        asm.WriteLine("\tCALL _getchar");  // Llamada a getchar de C
-                        asm.WriteLine("\tAND EAX, 0xFF");  // Asegurar que solo tomamos un byte
-                        asm.WriteLine("\tPUSH EAX");       // Guardar el valor en el stack
-                        s.Push(Console.Read());
-                    }
-                    break;
-                case "ReadLine":
-                    isRead = true;
-                    match("ReadLine");
-                    match("(");
-                    match(")");
-                    if (execute)
-                    {
-                        asm.WriteLine("; Leyendo una línea");
-                        asm.WriteLine("\tCALL _gets");     // Llamada a gets de C
-                        asm.WriteLine("\tPUSH EAX");       // Guardar el valor en el stack
-                        string? input = Console.ReadLine();
-                        float value = 0;
-                        if (input != null && float.TryParse(input, out value))
+                        match("Write");
+                        break;
+                    case "Read":
+                        isRead = true;
+                        match("Read");
+                        match("(");
+                        match(")");
+                        if (execute)
                         {
-                            s.Push(value);
+                            asm.WriteLine("; Leyendo un caracter");
+                            asm.WriteLine("\tCALL _getchar");  // Llamada a getchar de C
+                            asm.WriteLine("\tAND EAX, 0xFF");  // Asegurar que solo tomamos un byte
+                            asm.WriteLine("\tPUSH EAX");       // Guardar el valor en el stack
+                            s.Push(Console.Read());
                         }
-                        else
+                        break;
+                    case "ReadLine":
+                        isRead = true;
+                        match("ReadLine");
+                        match("(");
+                        match(")");
+                        if (execute)
                         {
-                            s.Push(0);
+                            asm.WriteLine("; Leyendo una línea");
+                            asm.WriteLine("\tCALL _gets");     // Llamada a gets de C
+                            asm.WriteLine("\tPUSH EAX");       // Guardar el valor en el stack
+                            string? input = Console.ReadLine();
+                            float value = 0;
+                            if (input != null && float.TryParse(input, out value))
+                            {
+                                s.Push(value);
+                            }
+                            else
+                            {
+                                s.Push(0);
+                            }
+                        }
+                        break;
+                    default:
+                        match("WriteLine");
+                        break;
+                }
+
+                match("(");
+
+                if (!isRead && Contenido != ")")
+                {
+                    if (Clasificacion == Tipos.Cadena)
+                    {
+                        if (execute)
+                        {
+                            string label = $"msg_{msgCounter++}";
+                            asm.WriteLine($"; Imprimiendo cadena: {Contenido}");
+                            string message = ($"{label} db \"{Contenido.Replace("\"", "")}\", 0");
+                            listaMensajes.Add(message);
+                            asm.WriteLine($"\tPRINT_STRING {label}");
+                            Console.Write(Contenido.ToString().Replace('"', ' '));
+                        }
+                        match(Tipos.Cadena);
+                    }
+                    else
+                    {
+                        string nomV = Contenido;
+                        match(Tipos.Identificador);
+                        Variable? v = l.Find(variable => variable.Nombre == nomV);
+
+                        if (v == null)
+                        {
+                            throw new Error($"La variable {nomV} no está definida", log, linea, columna);
+                        }
+                        if (execute)
+                        {
+                            Console.Write(((int)v.Valor).ToString());
                         }
                     }
-                    break;
-                default:
-                    match("WriteLine");
-                    break;
-            }
-
-            match("(");
-
-            if (!isRead && Contenido != ")")
-            {
-                if (Clasificacion == Tipos.Cadena)
-                {
-                    if (execute)
-                    {
-                        string label = $"msg_{msgCounter++}";
-                        asm.WriteLine($"; Imprimiendo cadena: {Contenido}");
-                        string message = ($"{label} db \"{Contenido.Replace("\"", "")}\", 0");
-                        listaMensajes.Add(message);
-                        asm.WriteLine($"\tPRINT_STRING {label}");
-                        Console.Write(Contenido.ToString().Replace('"', ' '));
-                    }
-                    match(Tipos.Cadena);
                 }
-                else
-                {
-                    string nomV = Contenido;
-                    match(Tipos.Identificador);
-                    Variable? v = l.Find(variable => variable.Nombre == nomV);
-
-                    if (v == null)
-                    {
-                        throw new Error($"La variable {nomV} no está definida", log, linea, columna);
-                    }
-                    if (execute)
-                    {
-                        Console.Write(((int)v.Valor).ToString());
-                    }
-                }
+                match(")");
+                match(";");
             }
-            match(")");
-            match(";");
-        }
         }
         //!SECTION
         //SECTION - Concatenaciones
