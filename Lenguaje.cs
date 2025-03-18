@@ -9,7 +9,7 @@
     //*7.- Programar el For (Listo)
     //*8.- Programar else (Listo)
     //*9.- Usar set y get en variables (Listo)
-    10.- Ajustar todos los parametros por default 
+    10.- Ajustar todos los parametros por default (Listo)
   //!SECTION  
 */
 
@@ -35,6 +35,7 @@ namespace ASM
         Variable.TipoDato maximoTipo;
         bool huboCasteo = false;
         Variable.TipoDato tipoCasteo = Variable.TipoDato.Char;
+        private List<string> listaMensajes = new List<string>();
         //!@params
 
 
@@ -93,6 +94,10 @@ namespace ASM
                         asm.WriteLine($"{elemento.Nombre} DD 0.0");
                         break;
                 }
+            }
+            foreach (string elemento in listaMensajes)
+            {
+                asm.WriteLine(elemento);
             }
         }
         //!SECTION
@@ -637,84 +642,73 @@ namespace ASM
         //Console -> Console.(WriteLine|Write) (cadena? concatenaciones?);
         private void console(bool execute)
         {
-            match("Console");
-            match(".");
-
-            bool saltoLinea = false;
-            isConsoleRead = false;
-
-
-            switch (Contenido)
             {
-                case "WriteLine":
-                    saltoLinea = true;
-                    match("WriteLine");
-                    break;
-                case "Write":
-                    match("Write");
-                    break;
-                case "ReadLine":
-                    isConsoleRead = true;
-                    match("ReadLine");
-                    break;
-                case "Read":
-                    isConsoleRead = true;
-                    match("Read");
-                    break;
-                default:
-                    throw new Error("Sintaxis: Se esperaba Write o WriteLine", log, linea, columna);
-            }
+                bool console = false;
+                bool isRead = false;
+                string content = "";
 
-            match("(");
+                match("Console");
+                match(".");
 
-            if (!isConsoleRead)
-            {
-                if (Clasificacion == Tipos.Cadena)
-            {
-                string label = $"msg_{msgCounter++}";
-                asm.WriteLine($"; Imprimiendo cadena: {Contenido}");
-
-                // Se define la cadena en la sección de datos
-                asm.WriteLine("section .data");
-                string literal = Contenido.Replace("\"", "");
-                asm.WriteLine($"{label} db \"{literal}\", 0");
-
-                // Se vuelve a la sección de texto y se invoca la macro PRINT_STRING
-                asm.WriteLine("segment .text");
-                asm.WriteLine($"\tPRINT_STRING {label}");
-                match(Tipos.Cadena);
-            }
-            else if (Clasificacion == Tipos.Identificador)
-            {
-                Variable? v = l.Find(variable => variable.Nombre == Contenido);
-                if (v == null)
+                switch (Contenido)
                 {
-                    throw new Error("La variable no existe", log, linea, columna);
+                    case "Write":
+                        console = true;
+                        match("Write");
+                        break;
+                    case "Read":
+                        isRead = true;
+                        match("Read");
+                        break;
+                    case "ReadLine":
+                        isRead = true;
+                        match("ReadLine");
+                        break;
+                    default:
+                        match("WriteLine");
+                        break;
                 }
 
-                asm.WriteLine($"; Imprimiendo variable: {v.Nombre}");
-                asm.WriteLine($"\tMOV EAX, [{v.Nombre}]");
-                asm.WriteLine("\tPRINT_UDEC 4, EAX"); // Usar macro PRINT_DEC para imprimir números
+                match("(");
 
-                match(Tipos.Identificador);
-            }
-            }
-            
-
-            match(")");
-            match(";");
-
-            if (!isConsoleRead)
-            {
-                if (saltoLinea)
+                if (!isRead && Contenido != ")")
                 {
-                    asm.WriteLine("\tNEWLINE");
+
+                    if (Clasificacion == Tipos.Cadena)
+                    {
+                        if (execute)
+                        {
+                            string label = $"msg_{msgCounter++}";
+                            asm.WriteLine($"; Imprimiendo cadena: {Contenido}");
+
+                            // Agregar la cadena a la lista de variables para la sección .data
+                            string message = ($"{label} db \"{Contenido.Replace("\"", "")}\", 0");
+                            listaMensajes.Add(message);
+
+                            // Instrucciones en la sección de texto
+                            asm.WriteLine($"\tPRINT_STRING {label}");
+                            Console.Write(Contenido.ToString().Replace('"', ' '));
+                        }
+                        match(Tipos.Cadena);
+                    }
+                    else
+                    {
+                        string nomV = Contenido;
+                        match(Tipos.Identificador);
+                        Variable v = l.Find(variable => variable.Nombre == nomV);
+
+                        if (v == null)
+                        {
+                            throw new Error("La variable no existe", log, linea, columna);
+                        }
+                        if (execute)
+                        {
+                            //? Por alguna razón sigue imprimiendo en float REVISAR
+                            Console.Write(((int)v.Valor).ToString());
+                        }
+                        //match(v.getValor().ToString());
+                    }
                 }
-            }
-            else
-            {
-                // Para lectura, se genera la instrucción GET_DEC para leer un entero de 4 bytes
-                asm.WriteLine("\tGET_DEC 4, eax");
             }
         }
 
