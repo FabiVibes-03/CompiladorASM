@@ -91,13 +91,13 @@ namespace ASM
                         break;
                     case Variable.TipoDato.Float:
                         log.WriteLine($"{elemento.Nombre} {elemento.Tipo} {elemento.Valor}");
-                        asm.WriteLine($"{elemento.Nombre} DD 0.0");
+                        asm.WriteLine($"{elemento.Nombre} DW 0.0");
                         break;
                 }
             }
             foreach (string elemento in listaMensajes)
             {
-                asm.WriteLine(elemento);
+                asm.WriteLine($"{elemento} DD 0");
             }
         }
         //!SECTION
@@ -166,7 +166,7 @@ namespace ASM
         }
         //!SECTION
         //SECTION - ListaIdentificadores
-        //ListaIdentificadores -> identificador (= Expresion)? (,ListaIdentificadores)?
+        //ListaIdentificadoress -> identificador (= Expresion)? (,ListaIdentificadores)?
         private void ListaIdentificadores(Variable.TipoDato t)
         {
             if (l.Find(variable => variable.Nombre == Contenido) != null)
@@ -216,7 +216,8 @@ namespace ASM
                     float resultado = s.Pop();
                     //NOTE - REVISAR ESTE POP
                     asm.WriteLine("\tPOP EAX");
-                    asm.WriteLine($"\tMOV [{v.Nombre}], EAX");
+                    //asm.WriteLine($"\tMOV [{v.Nombre}], EAX");
+                    asm.WriteLine($"\tMOV [" + v.Nombre + "], EAX");
                     v.setValor(resultado, linea, columna, log, maximoTipo);
                 }
             }
@@ -342,7 +343,99 @@ namespace ASM
                     match("=");
                     if (Contenido == "Console")
                     {
-                        ListaIdentificadores(v.Tipo); // Ya se hace este procedimiento arriba así que simplemente obtenemos a través del método lo que necesitamos
+                        bool console = false;
+                        bool isRead = false;
+                        string content = "";
+                        match("Console");
+                        match(".");
+
+                        switch (Contenido)
+                        {
+                            case "Write":
+                                console = true;
+                                match("Write");
+                                break;
+                            case "Read":
+                                isRead = true;
+                                match("Read");
+                                break;
+                            case "ReadLine":
+                                isRead = true;
+                                match("ReadLine");
+                                break;
+                            default:
+                                match("WriteLine");
+                                break;
+                        }
+
+                        match("(");
+
+                        if (!isRead && Contenido != ")")
+                        {
+
+                            if (Clasificacion == Tipos.Cadena)
+                            {
+                                if (execute)
+                                {
+                                    Console.Write(Contenido.ToString().Replace('"', ' '));
+                                }
+                                match(Tipos.Cadena);
+                            }
+                            else
+                            {
+                                string nomV = Contenido;
+                                match(Tipos.Identificador);
+                                v = l.Find(variable => variable.Nombre == nomV);
+
+                                if (v == null)
+                                {
+                                    throw new Error("La variable no existe", log, linea, columna);
+                                }
+                                if (execute)
+                                {
+                                    //? Por alguna razón sigue imprimiendo en float REVISAR
+                                    Console.Write(((int)v.Valor).ToString());
+                                }
+                                //match(v.Valor.ToString());
+                            }
+                        }
+
+                        if (Contenido == "+")
+                        {
+                            match("+");
+                            Concatenaciones();
+                        }
+
+                        match(")");
+
+                        if (isRead) //Esto si
+                        {
+
+                            asm.WriteLine("mov eax, buffer");
+                            if (Contenido == "ReadLine")
+                            {
+                                content = Console.ReadLine();
+                                asm.WriteLine("call gets    ; Leer una línea y almacenarla en buffer");
+                            }
+                            else
+                            {
+                                content = ((char)Console.Read()).ToString();
+                                asm.WriteLine("call getchar  ; Leer un solo carácter");
+                            }
+                            content = Contenido == "ReadLine" ? Console.ReadLine() : ((char)Console.Read()).ToString();
+                            asm.WriteLine($"; Leyendo: {content}");
+                        }
+
+
+                        if (!isRead && execute)
+                        {
+                            switch (console)
+                            {
+                                case true: Console.Write(content); break;
+                                case false: Console.WriteLine(content); break;
+                            }
+                        }
+
                     }
                     else
                     {
@@ -408,10 +501,10 @@ namespace ASM
                     asm.WriteLine($"; {v.Nombre} /= Expresion");
 
                     asm.WriteLine("\tPOP EBX");
-                    asm.WriteLine("\tMOV EAX, [{v.getNombre()}]");
+                    asm.WriteLine($"\tMOV EAX, [{v.Nombre}]");
                     asm.WriteLine("\tXOR EDX, EDX"); // Limpiar registros
                     asm.WriteLine("\tDIV EBX");  // Division -> resultado = EAX y residuo = EDX
-                    asm.WriteLine($"\tMOV [{v.Nombre}], EAX");
+                    asm.WriteLine($"\tMOV [" + v.Nombre + "], EAX");
                     maximoTipo = Variable.valorTipoDato(r, maximoTipo, huboCasteo);
                     v.setValor(r, linea, columna, log, maximoTipo);
                     break;
@@ -421,7 +514,7 @@ namespace ASM
                     r = v.Valor % s.Pop();
                     asm.WriteLine($"; {v.Nombre} %= Expresion");
                     asm.WriteLine("\tPOP EBX");
-                    asm.WriteLine("\tMOV EAX, [{v.getNombre()}]");
+                    asm.WriteLine($"\tMOV EAX, [{v.Nombre}]");
                     asm.WriteLine("\tXOR EDX, EDX"); //Limpiar registros
                     asm.WriteLine("\tDIV EBX");  // Division -> resultado = EAX y residuo = EDX
                     asm.WriteLine($"\tMOV [{v.Nombre}], EDX");
@@ -640,12 +733,12 @@ namespace ASM
         //!SECTION
         //SECTION - Console
         //Console -> Console.(WriteLine|Write) (cadena? concatenaciones?);
-        private void console(bool execute)
+        /* private void console(bool execute)
         {
             {
-                //bool console = false;
+                bool console = false;
                 bool isRead = false;
-                //string content = "";
+                string content = "";
 
                 match("Console");
                 match(".");
@@ -653,7 +746,7 @@ namespace ASM
                 switch (Contenido)
                 {
                     case "Write":
-                        //console = true;
+                        console = true;
                         match("Write");
                         break;
                     case "Read":
@@ -673,8 +766,8 @@ namespace ASM
                     case "ReadLine":
                         isRead = true;
                         match("ReadLine");
-                        match("(");
-                        match(")");
+                        //match("(");
+                        //match(")");
                         if (execute)
                         {
                             asm.WriteLine("; Leyendo una línea");
@@ -733,6 +826,105 @@ namespace ASM
                 match(")");
                 match(";");
             }
+        } */
+        private void console(bool excecute)
+        {
+            bool console = false;
+            bool isRead = false;
+            string content = "";
+
+            match("Console");
+            match(".");
+
+            switch (Contenido)
+            {
+                case "Write":
+                    console = true;
+                    match("Write");
+                    break;
+                case "Read":
+                    isRead = true;
+                    match("Read");
+                    break;
+                case "ReadLine":
+                    isRead = true;
+                    match("ReadLine");
+                    break;
+                default:
+                    match("WriteLine");
+                    break;
+            }
+
+            match("(");
+
+            if (!isRead && Contenido != ")")
+            {
+
+                if (Clasificacion == Tipos.Cadena)
+                {
+                    if (excecute)
+                    {
+                        Console.Write(Contenido.ToString().Replace('"', ' '));
+                    }
+                    match(Tipos.Cadena);
+                }
+                else
+                {
+                    string nomV = Contenido;
+                    match(Tipos.Identificador);
+                    Variable v = l.Find(variable => variable.Nombre == nomV);
+
+                    if (v == null)
+                    {
+                        throw new Error("La variable no existe", log, linea, columna);
+                    }
+                    if (excecute)
+                    {
+                        //? Por alguna razón sigue imprimiendo en float REVISAR
+                        Console.Write(((int)v.Valor).ToString());
+                    }
+                    //match(v.Valor.ToString());
+                }
+            }
+
+            if (Contenido == "+")
+            {
+                match("+");
+                Concatenaciones();
+            }
+
+            match(")");
+            match(";");
+
+            if (isRead) //Esto si
+            {
+
+                asm.WriteLine("mov eax, buffer");
+                if (Contenido == "ReadLine")
+                {
+                    content = Console.ReadLine();
+                    asm.WriteLine("call gets    ; Leer una línea y almacenarla en buffer");
+                }
+                else
+                {
+                    content = ((char)Console.Read()).ToString();
+                    asm.WriteLine("call getchar  ; Leer un solo carácter");
+                }
+                content = Contenido == "ReadLine" ? Console.ReadLine() : ((char)Console.Read()).ToString();
+                asm.WriteLine($"; Leyendo: {content}");
+            }
+
+
+            if (!isRead && excecute)
+            {
+                switch (console)
+                {
+                    case true: Console.Write(content); break;
+                    case false: Console.WriteLine(content); break;
+                }
+            }
+
+
         }
         //!SECTION
         //SECTION - Concatenaciones
