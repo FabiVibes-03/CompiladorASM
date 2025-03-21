@@ -5,18 +5,18 @@ using System.Threading.Tasks;
 
 static void Main(string[] args)
 {
-    int altura,i,j,x,y=7;
-    /* int altura; */
+    int altura,i,j, y;
+    float x;
     //char x=0, y=10, z=2;
-    //char c;
+    char c;
 
     //c = (100+200)
-    //c = (char) (100+200);
+    c = (char) (100+200);
 
-   /*  Console.WriteLine("Valor de altura = "); */
+    Console.WriteLine("Valor de altura = ");
     altura = Console.ReadLine();
-    Console.WriteLine("El valor de altura es:");
-    /* x = (3 + altura) * 8 - (10 - 4) / 2; // = 61
+
+    x = (3 + altura) * 8 - (10 - 4) / 2; // = 61
     x--;
     x+=(altura*8);
     x*=2;
@@ -58,5 +58,5 @@ static void Main(string[] args)
         i++;
     }
     while (i<altura*2);
-    Console.WriteLine(""); */
+    Console.WriteLine("");
 }

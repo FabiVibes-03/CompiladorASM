@@ -97,7 +97,7 @@ namespace ASM
             }
             foreach (string elemento in listaMensajes)
             {
-                asm.WriteLine($"{elemento} DD 0");
+                asm.WriteLine($"{elemento}");
             }
         }
         //!SECTION
@@ -208,6 +208,8 @@ namespace ASM
                     }
                     match("(");
                     match(")");
+
+                    asm.WriteLine($"GET_DEC 4, {v.Nombre}"); //REVIEW - Checar esto 
                 }
                 else
                 {
@@ -407,23 +409,19 @@ namespace ASM
                         }
 
                         match(")");
-
+                        asm.WriteLine($"GET_DEC 4, {v.Nombre}"); //REVIEW - Duda esto
                         if (isRead) //Esto si
                         {
-
-                            asm.WriteLine("mov eax, buffer");
                             if (Contenido == "ReadLine")
                             {
                                 content = Console.ReadLine();
-                                asm.WriteLine("call gets    ; Leer una línea y almacenarla en buffer");
                             }
                             else
                             {
                                 content = ((char)Console.Read()).ToString();
-                                asm.WriteLine("call getchar  ; Leer un solo carácter");
                             }
                             content = Contenido == "ReadLine" ? Console.ReadLine() : ((char)Console.Read()).ToString();
-                            asm.WriteLine($"; Leyendo: {content}");
+
                         }
 
 
@@ -732,106 +730,11 @@ namespace ASM
         }
         //!SECTION
         //SECTION - Console
-        //Console -> Console.(WriteLine|Write) (cadena? concatenaciones?);
-        /* private void console(bool execute)
+        private void console(bool execute)
         {
-            {
-                bool console = false;
-                bool isRead = false;
-                string content = "";
-
-                match("Console");
-                match(".");
-
-                switch (Contenido)
-                {
-                    case "Write":
-                        console = true;
-                        match("Write");
-                        break;
-                    case "Read":
-                        isRead = true;
-                        match("Read");
-                        match("(");
-                        match(")");
-                        if (execute)
-                        {
-                            asm.WriteLine("; Leyendo un caracter");
-                            asm.WriteLine("\tCALL _getchar");  // Llamada a getchar de C
-                            asm.WriteLine("\tAND EAX, 0xFF");  // Asegurar que solo tomamos un byte
-                            asm.WriteLine("\tPUSH EAX");       // Guardar el valor en el stack
-                            s.Push(Console.Read());
-                        }
-                        break;
-                    case "ReadLine":
-                        isRead = true;
-                        match("ReadLine");
-                        //match("(");
-                        //match(")");
-                        if (execute)
-                        {
-                            asm.WriteLine("; Leyendo una línea");
-                            asm.WriteLine("\tCALL _gets");     // Llamada a gets de C
-                            asm.WriteLine("\tPUSH EAX");       // Guardar el valor en el stack
-                            string? input = Console.ReadLine();
-                            float value = 0;
-                            if (input != null && float.TryParse(input, out value))
-                            {
-                                s.Push(value);
-                            }
-                            else
-                            {
-                                s.Push(0);
-                            }
-                        }
-                        break;
-                    default:
-                        match("WriteLine");
-                        break;
-                }
-
-                match("(");
-
-                if (!isRead && Contenido != ")")
-                {
-                    if (Clasificacion == Tipos.Cadena)
-                    {
-                        if (execute)
-                        {
-                            string label = $"msg_{msgCounter++}";
-                            asm.WriteLine($"; Imprimiendo cadena: {Contenido}");
-                            string message = ($"{label} db \"{Contenido.Replace("\"", "")}\", 0");
-                            listaMensajes.Add(message);
-                            asm.WriteLine($"\tPRINT_STRING {label}");
-                            Console.Write(Contenido.ToString().Replace('"', ' '));
-                        }
-                        match(Tipos.Cadena);
-                    }
-                    else
-                    {
-                        string nomV = Contenido;
-                        match(Tipos.Identificador);
-                        Variable? v = l.Find(variable => variable.Nombre == nomV);
-
-                        if (v == null)
-                        {
-                            throw new Error($"La variable {nomV} no está definida", log, linea, columna);
-                        }
-                        if (execute)
-                        {
-                            Console.Write(((int)v.Valor).ToString());
-                        }
-                    }
-                }
-                match(")");
-                match(";");
-            }
-        } */
-        private void console(bool excecute)
-        {
-            bool console = false;
+            bool isWrite = false;
+            bool isWriteLine = false;
             bool isRead = false;
-            string content = "";
 
             match("Console");
             match(".");
@@ -839,8 +742,12 @@ namespace ASM
             switch (Contenido)
             {
                 case "Write":
-                    console = true;
+                    isWrite = true;
                     match("Write");
+                    break;
+                case "WriteLine":
+                    isWriteLine = true;
+                    match("WriteLine");
                     break;
                 case "Read":
                     isRead = true;
@@ -851,81 +758,111 @@ namespace ASM
                     match("ReadLine");
                     break;
                 default:
-                    match("WriteLine");
-                    break;
+                    throw new Error("Método de Console no soportado", log, linea, columna);
             }
 
             match("(");
 
+            string resultado = "";
+            bool imprimirVariable = false;
+            string nombreVariable = "";
+
             if (!isRead && Contenido != ")")
             {
-
-                if (Clasificacion == Tipos.Cadena)
+                // Caso para concatenacion 
+                if (Contenido == "\"\"")
                 {
-                    if (excecute)
+                    match(Tipos.Cadena); // ""
+                    if (Contenido == "+")
                     {
-                        Console.Write(Contenido.ToString().Replace('"', ' '));
+                        match("+");
+                        if (Clasificacion == Tipos.Identificador)
+                        {
+                            nombreVariable = Contenido;
+                            Variable? v = l.Find(variable => variable.Nombre == nombreVariable);
+                            if (v == null)
+                                throw new Error("La variable no existe", log, linea, columna);
+
+                            match(Tipos.Identificador);
+                            imprimirVariable = true;
+                        }
                     }
+                }
+                else if (Clasificacion == Tipos.Cadena)
+                {
+                    resultado = Contenido.Trim('"');
                     match(Tipos.Cadena);
                 }
-                else
+                else if (Clasificacion == Tipos.Identificador)
                 {
-                    string nomV = Contenido;
-                    match(Tipos.Identificador);
-                    Variable v = l.Find(variable => variable.Nombre == nomV);
-
+                    nombreVariable = Contenido;
+                    Variable? v = l.Find(variable => variable.Nombre == nombreVariable);
                     if (v == null)
-                    {
                         throw new Error("La variable no existe", log, linea, columna);
-                    }
-                    if (excecute)
-                    {
-                        //? Por alguna razón sigue imprimiendo en float REVISAR
-                        Console.Write(((int)v.Valor).ToString());
-                    }
-                    //match(v.Valor.ToString());
+
+                    match(Tipos.Identificador);
+                    imprimirVariable = true;
                 }
             }
 
             if (Contenido == "+")
             {
                 match("+");
-                Concatenaciones();
+                resultado += Concatenaciones();
             }
 
             match(")");
             match(";");
 
-            if (isRead) //Esto si
+            if (isRead)
             {
-
-                asm.WriteLine("mov eax, buffer");
-                if (Contenido == "ReadLine")
+                // GET_DEC se ejecuta en asigancion y lista identificacion
+            }
+            else
+            {
+                if (imprimirVariable)
                 {
-                    content = Console.ReadLine();
-                    asm.WriteLine("call gets    ; Leer una línea y almacenarla en buffer");
+                    asm.WriteLine($"PRINT_DEC 4, {nombreVariable}");
+                }
+                else if (!string.IsNullOrEmpty(resultado))
+                {
+                    string label = $"msg_{msgCounter++}";
+                    string msgDef = $"{label} DD \"{resultado}\", 0";
+                    listaMensajes.Add(msgDef);
+                    asm.WriteLine($"PRINT_STRING {label}");
+                }
+
+                if (isWriteLine)
+                {
+                    asm.WriteLine("NEWLINE");
+                }
+            }
+
+            if (execute)
+            {
+                if (isRead)
+                {
+                    Console.ReadLine();
                 }
                 else
                 {
-                    content = ((char)Console.Read()).ToString();
-                    asm.WriteLine("call getchar  ; Leer un solo carácter");
-                }
-                content = Contenido == "ReadLine" ? Console.ReadLine() : ((char)Console.Read()).ToString();
-                asm.WriteLine($"; Leyendo: {content}");
-            }
-
-
-            if (!isRead && excecute)
-            {
-                switch (console)
-                {
-                    case true: Console.Write(content); break;
-                    case false: Console.WriteLine(content); break;
+                    if (imprimirVariable)
+                    {
+                        Variable? v = l.Find(variable => variable.Nombre == nombreVariable);
+                        if (v != null)
+                            Console.Write((int)v.Valor);
+                    }
+                    else
+                    {
+                        Console.Write(resultado);
+                    }
+                    if (isWriteLine)
+                        Console.WriteLine();
                 }
             }
-
-
         }
+
+
         //!SECTION
         //SECTION - Concatenaciones
         // Concatenaciones -> Identificador|Cadena ( + concatenaciones )?
@@ -1171,7 +1108,6 @@ namespace ASM
                 if (huboCasteo)
                 {
                     float valor = s.Pop();
-                    asm.WriteLine("\tPOP");
 
                     switch (tipoCasteo)
                     {
@@ -1185,7 +1121,6 @@ namespace ASM
                     }
                     //Obligamos el casteo
                     maximoTipo = tipoCasteo;
-                    asm.WriteLine("\tPUSH");
                     s.Push(valor);
                 }
                 match(")");
